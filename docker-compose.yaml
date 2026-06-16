@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: mariadb_db
+    restart: always
+    environment:
+      MARIADB_USER: user
+      MARIADB_PASSWORD: pass
+      MARIADB_DATABASE: dbname
+      MARIADB_ROOT_PASSWORD: rootpassword  # Requerido por la imagen de MariaDB
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  web:
+    image: susuario/test
+    container_name: web
+    restart: always
+    ports:
+      - "80:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:pass@db:3306/dbname
+    depends_on:
+      - db
+
+volumes:
+  mariadb_data:
