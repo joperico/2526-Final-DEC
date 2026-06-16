@@ -14,7 +14,7 @@ engine = create_engine(DATABASE_URL)
 
 @app.get("/status")
 def status():
-    return {"message": "FastAPI Apellidos-Nombre v.3.0"}
+    return {"message": "FastAPI Apellidos-Nombre v.4.0"}
 
 
 @app.get("/check")
