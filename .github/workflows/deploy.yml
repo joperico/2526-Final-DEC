@@ -13,7 +13,7 @@ on:
 jobs:
   build:
     name: build and push Docker image
-    runs-on: mi-app:latest
+    runs-on: ubuntu-latest
     steps: 
       # 1 
       - uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
   aws:
     name: Deploy image to aws
     needs: build
-    runs-on: mi-app:latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     # 1
