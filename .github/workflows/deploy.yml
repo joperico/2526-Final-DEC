@@ -46,8 +46,8 @@ jobs:
         username: ${{ secrets.AC2_USER_FIN }}
         port: 22 # ${{ secrets.PORT }}
         key: ${{ secrets.EC2_KEY_FIN }}
-        source: "docker-compose.yml"
-        target: /ubuntu/admin
+        source: "docker-compose.yaml"
+        target: /home/ubuntu/
     # 2
     - name: script deploy docker services 
       uses: appleboy/ssh-action@v1.0.3
