@@ -96,29 +96,8 @@ jobs:
         '
 
     # 7. Verificar que la aplicación está funcionando
-    - name: Deploy and verify
+    - name: Verify deployment
       run: |
-          # Iniciar contenedor
-          docker run -d -p 80:80 --name myapp myimage:latest
-    
-          # Verificar estado del contenedor
-          echo "Estado del contenedor:"
-          docker ps
-    
-          # Verificar logs
-          echo "Logs del contenedor:"
-          docker logs myapp
-    
-          # Esperar y verificar con reintentos
-          for i in {1..30}; do
-           echo "Intento $i/30 - Verificando servicio..."
-           if curl -f http://localhost:80; then
-             echo "✅ Servicio verificado exitosamente!"
-             exit 0
-           fi
-           sleep 2
-             done
-    
-          echo "❌ No se pudo verificar el servicio"
-          docker logs myapp
-          exit 1
+        sleep 10
+        curl -f http://${{ secrets.EC2_IP_REC }} || exit 1
+        echo "✅ ¡Despliegue exitoso!"
