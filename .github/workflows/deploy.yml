@@ -43,7 +43,7 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.EC2_IP_FIN }}
-        username: ${{ secrets.AC2_USER_FIN }}
+        username: ${{ secrets.EC2_USER_FIN }}
         port: 22 # ${{ secrets.PORT }}
         key: ${{ secrets.EC2_KEY_FIN }}
         source: "docker-compose.yaml"
@@ -52,7 +52,7 @@ jobs:
     - name: script deploy docker services 
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.AC2_IP_FIN }}
+        host: ${{ secrets.EC2_IP_FIN }}
         username: ${{ secrets.EC2_USER_FIN }}
         key: ${{ secrets.EC2_KEY_FIN }}
         port: 22  # ${{ secrets.PORT }}
