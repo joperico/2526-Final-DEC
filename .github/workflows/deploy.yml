@@ -19,15 +19,15 @@ jobs:
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DHUB_USER_REC }}
-        password: ${{ secrets.DHUB_TOKEN_REC }}
+        username: ${{ secrets.DH_USER_FIN }}
+        password: ${{ secrets.DH_TOKEN_FIN }}
 
     # 3. Obtener metadata para etiquetar la imagen
     - name: Extract metadata (tags, labels) for Docker
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: ${{ secrets.DHUB_USER_REC }}/mi-app
+        images: ${{ secrets.DH_USER_FIN }}/mi-app
 
     # 4. Construir y subir imagen a Docker Hub
     - name: Build and push Docker image
@@ -35,21 +35,21 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ secrets.DHUB_USER_REC }}/mi-app:latest
+        tags: ${{ secrets.DH_USER_FIN }}/mi-app:latest
         labels: ${{ steps.meta.outputs.labels }}
 
     # 5. Configurar SSH para conectarse a EC2
     - name: Set up SSH
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_KEY_REC }}" > ~/.ssh/id_rsa
+        echo "${{ secrets.EC2_KEY_FIN }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_IP_REC }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.EC2_IP_FIN }} >> ~/.ssh/known_hosts
 
     # 6. Desplegar en EC2
     - name: Deploy to EC2
       run: |
-        ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER_REC }}@${{ secrets.EC2_IP_REC }} '
+        ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER_FIN }}@${{ secrets.EC2_IP_FIN }} '
           # Crear directorio si no existe
           mkdir -p ~/app
 
@@ -71,7 +71,7 @@ jobs:
                 - mariadb_data:/var/lib/mysql
 
             web:
-              image: ${{ secrets.DHUB_USER_REC }}/mi-app:latest
+              image: ${{ secrets.DH_USER_FIN }}/mi-app:latest
               container_name: web
               restart: always
               ports:
@@ -99,5 +99,5 @@ jobs:
     - name: Verify deployment
       run: |
         sleep 10
-        curl -f http://${{ secrets.EC2_IP_REC }} || exit 1
+        curl -f http://${{ secrets.EC2_IP_FIN }} || exit 1
         echo "✅ ¡Despliegue exitoso!"
