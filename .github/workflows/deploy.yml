@@ -1,96 +1,62 @@
-name: Build, Push Docker Image and Deploy to EC2
+name: Docker CI/CD
 
 on:
   push:
-    branches:
-      - main  # o master, según tu rama principal
-  workflow_dispatch:  # Permite ejecutar manualmente
+    branches: [ main ]
+    paths:
+      - src/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - src/**
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  build:
+    name: build and push Docker image
+    runs-on: mi-app:latest
+    steps: 
+      # 1 
+      - uses: actions/checkout@v4
+      # 2  
+      - name: Login to DockerHub
+        uses: docker/login-action@v3 
+        with:
+          username: ${{ secrets.DH_USER_FIN }}
+          password: ${{ secrets.DH_TOKEN_FIN }}
+      # 3   
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true 
+          tags: ${{ secrets.DH_USER_FIN }}/galeria:latest
 
+  # cÃ³digo aÃ±adido
+  aws:
+    name: Deploy image to aws
+    needs: build
+    runs-on: mi-app:latest
     steps:
-    # 1. Clonar el repositorio
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    # 2. Iniciar sesión en Docker Hub
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
+    - uses: actions/checkout@v4
+    # 1
+    - name: copy docker compose via ssh key  
+      uses: appleboy/scp-action@v0.1.7
       with:
-        username: ${{ secrets.DH_USER_FIN }}
-        password: ${{ secrets.DH_TOKEN_FIN }}
-
-    # 3. Obtener metadata para etiquetar la imagen
-    - name: Extract metadata (tags, labels) for Docker
-      id: meta
-      uses: docker/metadata-action@v4
+        host: ${{ secrets.EC2_IP_FIN }}
+        username: ${{ secrets.AC2_USER_FIN }}
+        port: 22 # ${{ secrets.PORT }}
+        key: ${{ secrets.EC2_KEY_FIN }}
+        source: "docker-compose.yml"
+        target: /ubuntu/admin
+    # 2
+    - name: script deploy docker services 
+      uses: appleboy/ssh-action@v1.0.3
       with:
-        images: ${{ secrets.DH_USER_FIN }}/mi-app
-
-    # 4. Construir y subir imagen a Docker Hub
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: ${{ secrets.DH_USER_FIN }}/mi-app:latest
-        labels: ${{ steps.meta.outputs.labels }}
-
-    # 5. Configurar SSH para conectarse a EC2
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_KEY_FIN }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_IP_FIN }} >> ~/.ssh/known_hosts
-
-    # 6. Desplegar en EC2
-    - name: Deploy to EC2
-      run: |
-        ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER_FIN }}@${{ secrets.EC2_IP_FIN }} '
-          # Crear directorio si no existe
-          mkdir -p ~/app
-
-          # Crear docker-compose.yaml en EC2
-          cat > ~/app/docker-compose.yaml << EOF
-          services:
-            db:
-              image: mariadb:10.11
-              container_name: mariadb_db
-              restart: always
-              environment:
-                MARIADB_USER: user
-                MARIADB_PASSWORD: pass
-                MARIADB_DATABASE: dbname
-                MARIADB_ROOT_PASSWORD: rootpassword
-              ports:
-                - "3306:3306"
-              volumes:
-                - mariadb_data:/var/lib/mysql
-
-            web:
-              image: ${{ secrets.DH_USER_FIN }}/mi-app:latest
-              container_name: web
-              restart: always
-              ports:
-                - "80:8000"
-              environment:
-                - DATABASE_URL=mysql+pymysql://user:pass@db:3306/dbname
-              depends_on:
-                - db
-
-          volumes:
-            mariadb_data:
-          EOF
-
-          # Ir al directorio y desplegar
-          cd ~/app
-          docker-compose down
-          docker-compose pull
-          docker-compose up -d
-
-          # Limpiar imágenes no usadas
-          docker system prune -f
-        '
+        host: ${{ secrets.AC2_IP_FIN }}
+        username: ${{ secrets.EC2_USER_FIN }}
+        key: ${{ secrets.EC2_KEY_FIN }}
+        port: 22  # ${{ secrets.PORT }}
+        script: |
+            sleep 60
+            docker compose down --rmi all
+            docker compose up -d
