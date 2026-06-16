@@ -4,11 +4,11 @@ on:
   push:
     branches: [ main ]
     paths:
-      - src/**
+      - fuentes/**
   pull_request:
     branches: [ main ]
     paths:
-      - src/**
+      - fuentes/**
 
 jobs:
   build:
