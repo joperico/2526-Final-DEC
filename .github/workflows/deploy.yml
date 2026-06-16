@@ -97,7 +97,15 @@ jobs:
 
     # 7. Verificar que la aplicación está funcionando
     - name: Verify deployment
-      run: |
-        sleep 10
-        curl -f http://${{ secrets.EC2_IP_REC }} || exit 1
-        echo "✅ ¡Despliegue exitoso!"
+  run: |
+    sleep 10
+    # Opciones de verificación
+    echo "Verificando servicio..."
+    
+    # Intentar con diferentes formatos
+    curl -f http://localhost:80 || \
+    curl -f http://127.0.0.1:80 || \
+    curl -f http://$(hostname -I | awk '{print $1}'):80 || \
+    (echo "❌ No se pudo conectar" && exit 1)
+    
+    echo "✅ Servicio verificado!"
