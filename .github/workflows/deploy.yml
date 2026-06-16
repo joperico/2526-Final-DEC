@@ -98,6 +98,6 @@ jobs:
     # 7. Verificar que la aplicación está funcionando
     - name: Verify deployment
       run: |
-        sleep 10
+        sleep 30
         curl -f http://${{ secrets.EC2_IP_FIN }} || exit 1
         echo "✅ ¡Despliegue exitoso!"
